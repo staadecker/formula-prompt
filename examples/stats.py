@@ -1,5 +1,6 @@
-import math
 from calculator_framework import *
+
+import math
 from scipy.stats import norm
 from scipy.special import gamma, gammainc
 
@@ -12,12 +13,12 @@ These methods are very straight forward, they take in a list and return the resu
 """
 
 
-@register(ListInput())
+@register_formula(ListInput())
 def mean(x):
     return sum(x) / len(x)
 
 
-@register(ListInput())
+@register_formula(ListInput())
 def median(x):
     x = sorted(x)
     n = len(x)
@@ -27,7 +28,7 @@ def median(x):
         return x[n // 2]
 
 
-@register(ListInput())
+@register_formula(ListInput())
 def sample_variance(x):
     n = len(x)
     m = mean(x)
@@ -37,28 +38,28 @@ def sample_variance(x):
     return s / (n - 1)
 
 
-@register(ListInput())
+@register_formula(ListInput())
 def sample_std(x):
     return math.sqrt(sample_variance(x))
 
 
-@register(ListInput())
+@register_formula(ListInput())
 def sort(x):
     return sorted(x)
 
 
-@register([
-    NumInput("x", require_int=True),
-    NumInput("n", require_int=True),
+@register_formula([
+    IntInput("x"),
+    IntInput("n"),
     NumInput("p")
 ])
 def binomial_dist(x, n, p):
     return math.comb(n, x) * (p ** x) * ((1 - p) ** (n - x))
 
 
-@register([
-    NumInput("x", require_int=True),
-    NumInput("n", require_int=True),
+@register_formula([
+    IntInput("x"),
+    IntInput("n"),
     NumInput("p")
 ])
 def binomial_dist_cuml(x, n, p):
@@ -69,42 +70,42 @@ def _description_hypergeo_dist():
     return ("x", int), ("N", int), ("n", int), ("k", int)
 
 
-@register([
-    NumInput("x", require_int=True),
-    NumInput("N", require_int=True),
-    NumInput("n", require_int=True),
-    NumInput("k", require_int=True)
+@register_formula([
+    IntInput("x"),
+    IntInput("N"),
+    IntInput("n"),
+    IntInput("k")
 ])
 def hypergeo_dist(x, N, n, k):
     return math.comb(k, x) * math.comb(N - k, n - x) / math.comb(N, n)
 
 
-@register([
-    NumInput("x", require_int=True),
-    NumInput("k", require_int=True),
+@register_formula([
+    IntInput("x"),
+    IntInput("k"),
     NumInput("p")
 ])
 def inv_binomial(x, k, p):
     return math.comb(x - 1, k - 1) * (p ** k) * ((1 - p) ** (x - k))
 
 
-@register([
-    NumInput("x", require_int=True),
+@register_formula([
+    IntInput("x"),
     NumInput("mu"),
 ])
 def poisson_dist(x, m):
     return math.exp(-m) * (m ** x) / math.factorial(x)
 
 
-@register([
-    NumInput("x", require_int=True),
+@register_formula([
+    IntInput("x"),
     NumInput("mu"),
 ])
 def poisson_dist_cuml(x, m):
     return sum([poisson_dist(i, m) for i in range(0, x + 1)])
 
 
-@register([
+@register_formula([
     NumInput("z_lower", optional=True),
     NumInput("z_upper", optional=True)
 ])
@@ -119,12 +120,12 @@ def std_normal_dist_cuml(z_low, z_end):
     return norm.cdf(z_end) - norm.cdf(z_low)
 
 
-@register([NumInput("percent below z")])
+@register_formula([NumInput("percent below z")])
 def cdf_to_z_values(cdf):
     return norm.ppf(cdf)
 
 
-@register([
+@register_formula([
     NumInput("lower incomplete", optional=True),
     NumInput("alpha")
 ])
@@ -136,4 +137,4 @@ def gamma_func(x, a):
 
 
 if __name__ == "__main__":
-    Calculator().launch()
+    run_calculator()
