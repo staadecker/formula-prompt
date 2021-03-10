@@ -2,7 +2,7 @@
 
 This library let's you define formulas that you can then
 evaluate in your command line. I use this library to do school
-work were repetitive calculations are required.
+work where repetitive calculations are required.
 
 ## Example
 
