@@ -137,4 +137,4 @@ def gamma_func(x, a):
 
 
 if __name__ == "__main__":
-    run_calculator()
+    launch_calculator()

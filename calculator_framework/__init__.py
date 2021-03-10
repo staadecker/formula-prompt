@@ -8,12 +8,13 @@ Important functions:
 register_formula() -- Should be used as a function decorator to register
 formulas into the library
 
-run_calculator() -- Starts the calculator using the registered formulas.
+launch_calculator() -- Starts the calculator using the registered formulas.
 """
 
 _REGISTERED_FORMULAS = []
 
 _MAX_ENTRY_ATTEMPTS = 3
+DEFAULT_NUMBER_OF_DECIMALS = 4
 
 
 class UserInputError(Exception):
@@ -72,7 +73,7 @@ class NumInput(Input):
             except ValueError as e:
                 if self.optional and i == "":
                     return None
-                print("Invalid number")
+                print("Invalid number. Try again.")
         raise UserInputError
 
 
@@ -103,15 +104,16 @@ class ListInput(Input):
                 consecutive_failures += 1
                 if consecutive_failures == _MAX_ENTRY_ATTEMPTS:
                     raise UserInputError
-                print("Invalid number")
+                print("Invalid number. Try again.")
 
 
-def register_formula(inputs, decimal_places=None):
+def register_formula(inputs, decimal_places=DEFAULT_NUMBER_OF_DECIMALS):
     """
     Function decorator that adds a formula to the list of registered formulas
 
     :param inputs: Element of type <Input> or list of <Input> elements representing
     the inputs that should be passed to the formula
+    :param decimal_places: Number of decimal places to round your answer to before printing
     """
     # If only one argument is passed, wrap it by a tuple
     if isinstance(inputs, Input):
@@ -134,7 +136,7 @@ def register_formula(inputs, decimal_places=None):
     return decorator
 
 
-def run_calculator():
+def launch_calculator():
     """
     Infinite loop that
     1. Reads from the command line the formula the user wants to call
@@ -165,7 +167,7 @@ def run_calculator():
         if ans is not None:
             print(f"{formula.__name__}:\n{ans}")
 
-        input("\nEnter to continue...\n>>> ")
+        input("\nPress enter to run again...\n>>> ")
 
 
 def pick_formula(prev_formula):
@@ -180,5 +182,7 @@ def pick_formula(prev_formula):
         except ValueError:
             if selection == "" and prev_formula is not None:
                 return prev_formula
-            print("Invalid input")
+            print("Invalid input. Try again.")
+        except IndexError:
+            print("Invalid input. Try again.")
     raise UserInputError

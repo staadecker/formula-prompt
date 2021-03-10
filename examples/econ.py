@@ -66,4 +66,4 @@ def geometric_factor(N, i, g):
 
 
 if __name__ == "__main__":
-    run_calculator()
+    launch_calculator()
