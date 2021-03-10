@@ -1,3 +1,5 @@
+import functools
+
 """
 Library that allows registering formulas and then using them in a calculator.
 
@@ -62,7 +64,7 @@ class NumInput(Input):
     def process(self):
         for _ in range(_MAX_ENTRY_ATTEMPTS):
             try:
-                i = input()
+                i = input(">>> ")
                 if self.require_int:
                     return int(i)
                 else:
@@ -92,7 +94,7 @@ class ListInput(Input):
         consecutive_failures = 0
         while True:
             try:
-                i = input()
+                i = input(">>> ")
                 values.append(float(i))
                 consecutive_failures = 0
             except ValueError:
@@ -104,7 +106,7 @@ class ListInput(Input):
                 print("Invalid number")
 
 
-def register_formula(inputs):
+def register_formula(inputs, decimal_places=None):
     """
     Function decorator that adds a formula to the list of registered formulas
 
@@ -116,9 +118,18 @@ def register_formula(inputs):
         inputs = (inputs,)
 
     def decorator(func):
-        func.inputs = inputs
-        _REGISTERED_FORMULAS.append(func)
-        return func
+        @functools.wraps(func)
+        def inner_function(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if decimal_places is not None and type(result) == float:
+                multiplier = 10 ** decimal_places
+                result = round(result * multiplier) / multiplier
+
+            return result
+
+        inner_function.inputs = inputs
+        _REGISTERED_FORMULAS.append(inner_function)
+        return inner_function
 
     return decorator
 
@@ -154,7 +165,7 @@ def run_calculator():
         if ans is not None:
             print(f"{formula.__name__}:\n{ans}")
 
-        input("\nEnter to continue...")
+        input("\nEnter to continue...\n>>> ")
 
 
 def pick_formula(prev_formula):
@@ -162,7 +173,7 @@ def pick_formula(prev_formula):
     for i, formula in enumerate(_REGISTERED_FORMULAS):
         print(f"{i}:\t{formula.__name__}")
     for _ in range(_MAX_ENTRY_ATTEMPTS):
-        selection = input("Pick a formula: ")
+        selection = input("Pick a formula:\n>>> ")
 
         try:
             return _REGISTERED_FORMULAS[int(selection)]
