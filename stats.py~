@@ -1,6 +1,7 @@
 import math
 from formula_prog import FormulaSet
 from scipy.stats import norm
+from scipy.special import gamma, gammainc
 from typing import Optional
 
 """
@@ -115,9 +116,47 @@ class Stats:
         if z_low is None:
             return norm.cdf(z_end)
         if z_end is None:
-            return 1-norm.cdf(z_low)
+            return 1 - norm.cdf(z_low)
         return norm.cdf(z_end) - norm.cdf(z_low)
 
+    @staticmethod
+    def cdf_to_z_values(cdf):
+        return norm.ppf(cdf)
+
+    @staticmethod
+    def _description_cdf_to_z_values():
+        return {
+            "inputs": [
+                {
+                    "name": "percent below z",
+                    "parse": float
+                }
+            ]
+        }
+
+
+    @staticmethod
+    def _description_gamma_func():
+        return {
+            "inputs": [
+                {
+                    "name": "alpha",
+                    "parse": float
+                },
+                {
+                    "name": "lower incomplete",
+                    "parse": float,
+                    "optional": True
+                }
+            ]
+        }
+
+    @staticmethod
+    def gamma_func(a, x):
+        if x is None:
+            return gamma(a)
+        else:
+            return gammainc(a,x)*gamma(a)
 
 if __name__ == "__main__":
     formula_set = FormulaSet(Stats, except_many_functions=True)
