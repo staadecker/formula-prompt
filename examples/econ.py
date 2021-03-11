@@ -1,4 +1,4 @@
-from calculator_framework import *
+from formula_prompt import *
 
 
 @register_formula([
@@ -66,4 +66,4 @@ def geometric_factor(N, i, g):
 
 
 if __name__ == "__main__":
-    launch_calculator()
+    launch_prompt()

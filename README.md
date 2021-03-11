@@ -1,17 +1,17 @@
-# Calculator framework
+# Formula Prompt
 
 This library let's you define formulas that you can later
 evaluate in your command line. I use this library for school
-work that requires doing repetitive calculations or calculations
+work that requires repetitive calculations or calculations
 needing a computer.
 
 ## Example
 
-Here's how you'd define formulas to find the
+Here's how you define formulas to find the
 volume of a cube and rectangular prism.
 
 ```python
-from calculator_framework import *
+from formula_prompt import *
 
 # 1. Define your formulas
 @register_formula([NumInput("side length")])
@@ -27,7 +27,7 @@ def volume_of_rectangular_prism(length, width, height):
     return length * width * height
 
 # 2. Start the command line prompt
-launch_calculator()
+launch_prompt()
 ```
 
 When you run this file, a prompt will let you evaluate your
@@ -53,7 +53,7 @@ For more examples, look at the `examples` folder on GitHub.
 
 ### Installation
 
-Simply run: `pip install calculator-framework`
+Simply run: `pip install formula-prompt`
 
 ### Setting up your code
 
@@ -67,7 +67,7 @@ To use this library:
 register you function will the library.
 
    
-3. Run `launch_calculator()` to start the prompt.
+3. Run `launch_prompt()` to start the prompt.
 
 ### Using `@register_formula(...)`
 

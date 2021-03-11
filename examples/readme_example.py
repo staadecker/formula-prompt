@@ -1,4 +1,4 @@
-from calculator_framework import *
+from formula_prompt import *
 
 
 # 1. Define your formulas
@@ -17,4 +17,4 @@ def volume_of_rectangular_prism(length, width, height):
 
 
 # 2. Start the command line prompt
-launch_calculator()
+launch_prompt()

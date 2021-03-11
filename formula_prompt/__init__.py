@@ -1,14 +1,14 @@
 import functools
 
 """
-Library that allows registering formulas and then using them in a calculator.
+Library that allows registering formulas and then using them in your command prompt.
 
 Important functions:
 
 register_formula() -- Should be used as a function decorator to register
 formulas into the library
 
-launch_calculator() -- Starts the calculator using the registered formulas.
+formula_prompt() -- Starts the prompt using the registered formulas.
 """
 
 _REGISTERED_FORMULAS = []
@@ -28,7 +28,7 @@ class Input:
 
     Important functions:
 
-    read() -- Called by the Calculator instance to retrieve the input value from the user.
+    read() -- Called by the program to retrieve the input value from the user.
 
     process() -- Function to be overridden by subclasses. Should read from input() and return
             the parsed value that will be passed on to the formula.
@@ -136,7 +136,7 @@ def register_formula(inputs, decimal_places=DEFAULT_NUMBER_OF_DECIMALS):
     return decorator
 
 
-def launch_calculator():
+def launch_prompt():
     """
     Infinite loop that
     1. Reads from the command line the formula the user wants to call

@@ -1,4 +1,4 @@
-from calculator_framework import *
+from formula_prompt import *
 
 import math
 from scipy.stats import norm
@@ -137,4 +137,4 @@ def gamma_func(x, a):
 
 
 if __name__ == "__main__":
-    launch_calculator()
+    launch_prompt()
