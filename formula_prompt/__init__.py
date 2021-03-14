@@ -123,7 +123,7 @@ def register_formula(inputs, decimal_places=DEFAULT_NUMBER_OF_DECIMALS):
         @functools.wraps(func)
         def inner_function(*args, **kwargs):
             result = func(*args, **kwargs)
-            if decimal_places is not None and type(result) == float:
+            if decimal_places is not None and isinstance(result, float):
                 multiplier = 10 ** decimal_places
                 result = round(result * multiplier) / multiplier
 
