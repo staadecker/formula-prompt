@@ -2,6 +2,9 @@ from formula_prompt import *
 
 
 # 1. Define your formulas
+from formula_prompt import NumInput
+
+
 @register_formula([NumInput("side length")])
 def volume_of_cube(s):
     return s ** 3

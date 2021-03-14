@@ -13,12 +13,12 @@ These methods are very straight forward, they take in a list and return the resu
 """
 
 
-@register_formula(ListInput())
+@register_formula(ListInput(), group="sample statistics")
 def mean(x):
     return sum(x) / len(x)
 
 
-@register_formula(ListInput())
+@register_formula(ListInput(), group="sample statistics")
 def median(x):
     x = sorted(x)
     n = len(x)
@@ -28,7 +28,7 @@ def median(x):
         return x[n // 2]
 
 
-@register_formula(ListInput())
+@register_formula(ListInput(), group="sample statistics")
 def sample_variance(x):
     n = len(x)
     m = mean(x)
@@ -38,7 +38,7 @@ def sample_variance(x):
     return s / (n - 1)
 
 
-@register_formula(ListInput())
+@register_formula(ListInput(), group="sample statistics")
 def sample_std(x):
     return math.sqrt(sample_variance(x))
 
@@ -52,7 +52,9 @@ def sort(x):
     IntInput("x"),
     IntInput("n"),
     NumInput("p")
-])
+],
+    group="distributions.binomial"
+)
 def binomial_dist(x, n, p):
     return math.comb(n, x) * (p ** x) * ((1 - p) ** (n - x))
 
@@ -61,7 +63,9 @@ def binomial_dist(x, n, p):
     IntInput("x"),
     IntInput("n"),
     NumInput("p")
-])
+],
+    group="distributions.binomial"
+)
 def binomial_dist_cuml(x, n, p):
     return sum([binomial_dist(i, n, p) for i in range(0, x + 1)])
 
@@ -75,7 +79,7 @@ def _description_hypergeo_dist():
     IntInput("N"),
     IntInput("n"),
     IntInput("k")
-])
+], group="distributions")
 def hypergeo_dist(x, N, n, k):
     return math.comb(k, x) * math.comb(N - k, n - x) / math.comb(N, n)
 
@@ -84,7 +88,7 @@ def hypergeo_dist(x, N, n, k):
     IntInput("x"),
     IntInput("k"),
     NumInput("p")
-])
+], group="distributions.binomial")
 def inv_binomial(x, k, p):
     return math.comb(x - 1, k - 1) * (p ** k) * ((1 - p) ** (x - k))
 
@@ -92,7 +96,7 @@ def inv_binomial(x, k, p):
 @register_formula([
     IntInput("x"),
     NumInput("mu"),
-])
+], group="distributions.poisson")
 def poisson_dist(x, m):
     return math.exp(-m) * (m ** x) / math.factorial(x)
 
@@ -100,7 +104,7 @@ def poisson_dist(x, m):
 @register_formula([
     IntInput("x"),
     NumInput("mu"),
-])
+], group="distributions.poisson")
 def poisson_dist_cuml(x, m):
     return sum([poisson_dist(i, m) for i in range(0, x + 1)])
 
@@ -108,7 +112,7 @@ def poisson_dist_cuml(x, m):
 @register_formula([
     NumInput("z_lower", optional=True),
     NumInput("z_upper", optional=True)
-])
+], group="distributions.normal")
 def std_normal_dist_cuml(z_low, z_end):
     if z_low is None and z_end is None:
         print("Lower and upper bounds can't both be None")
@@ -120,7 +124,7 @@ def std_normal_dist_cuml(z_low, z_end):
     return norm.cdf(z_end) - norm.cdf(z_low)
 
 
-@register_formula([NumInput("percent below z")])
+@register_formula([NumInput("percent below z")], group="distributions.normal")
 def cdf_to_z_values(cdf):
     return norm.ppf(cdf)
 
