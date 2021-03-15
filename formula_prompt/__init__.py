@@ -18,7 +18,7 @@ formula_prompt() -- Starts the prompt using the registered formulas.
 
 _DEFAULT_NUMBER_OF_DECIMALS = 4
 
-def register_formula(inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, group=None):
+def register_formula(inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, name=None):
     """
     Function decorator that adds a formula to the list of registered formulas
 
@@ -40,7 +40,7 @@ def register_formula(inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, group=N
 
             return result
 
-        NAVIGATION_ROOT.add_formula(Formula(inner_function, inputs), group)
+        NAVIGATION_ROOT.add_formula(Formula(inner_function, inputs, name if name is not None else func.__name__))
         return inner_function
 
     return decorator

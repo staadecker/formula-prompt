@@ -10,16 +10,10 @@ class _Element:
     def run(self):
         raise NotImplementedError
 
-    def __hash__(self):
-        return self.name.__hash__()
-
-    def __eq__(self, other):
-        return self.name == other.name
-
 
 class Formula(_Element):
-    def __init__(self, func, inputs):
-        super(Formula, self).__init__(func.__name__)
+    def __init__(self, func, inputs, name):
+        super(Formula, self).__init__(name)
         self.func = func
         self.inputs = inputs
 
@@ -88,20 +82,28 @@ class _Group:
             if not self.is_root or should_leave:
                 break
 
-    def add_formula(self, formula, group):
-        if group is None or group == "":
+    def add_formula(self, formula, path=None, depth=0):
+        if path is None:
+            path = formula.name.split(".")
+
+        # If we're at the end of the path, no more folders, it's time to add the formula
+        if depth == len(path) - 1:
             self.sub_elements.add(formula)
-        else:
-            group, sep, subgroup = group.partition(".")
+            return
 
-            for element in self.sub_elements:
-                if isinstance(element, _Group) and element.name == group:
-                    element.add_formula(formula, subgroup)
-                    return
+        # Otherwise check if the folder exists
+        for element in self.sub_elements:
+            if isinstance(element, _Group) and element.name == ".".join(path[:depth + 1]):
+                # If it does, add the formula to that folder (recursive call)
+                element.add_formula(formula, path, depth + 1)
+                return
 
-            new_group = _Group(group)
-            new_group.add_formula(formula, subgroup)
-            self.sub_elements.add(new_group)
+        # If the folder doesn't exist create it
+        new_group = _Group(".".join(path[:depth + 1]))
+        # And add the formula to it (recursive call)
+        new_group.add_formula(formula, path, depth + 1)
+        # And then add the folder to the current folder
+        self.sub_elements.add(new_group)
 
 
 class _LeaveGroup(_Element):

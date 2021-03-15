@@ -1,7 +1,7 @@
 from formula_prompt import *
 
 import math
-from scipy.stats import norm
+from scipy.stats import norm, chi2
 from scipy.special import gamma, gammainc
 
 """
@@ -13,12 +13,12 @@ These methods are very straight forward, they take in a list and return the resu
 """
 
 
-@register_formula(ListInput(), group="sample statistics")
+@register_formula(ListInput(), name="sample.mean")
 def mean(x):
     return sum(x) / len(x)
 
 
-@register_formula(ListInput(), group="sample statistics")
+@register_formula(ListInput(), name="sample.median")
 def median(x):
     x = sorted(x)
     n = len(x)
@@ -28,7 +28,7 @@ def median(x):
         return x[n // 2]
 
 
-@register_formula(ListInput(), group="sample statistics")
+@register_formula(ListInput(), name="sample.variance")
 def sample_variance(x):
     n = len(x)
     m = mean(x)
@@ -38,7 +38,7 @@ def sample_variance(x):
     return s / (n - 1)
 
 
-@register_formula(ListInput(), group="sample statistics")
+@register_formula(ListInput(), name="sample.std")
 def sample_std(x):
     return math.sqrt(sample_variance(x))
 
@@ -53,7 +53,7 @@ def sort(x):
     IntInput("n"),
     NumInput("p")
 ],
-    group="distributions.binomial"
+    name="distributions.binomial.binomial"
 )
 def binomial_dist(x, n, p):
     return math.comb(n, x) * (p ** x) * ((1 - p) ** (n - x))
@@ -64,14 +64,10 @@ def binomial_dist(x, n, p):
     IntInput("n"),
     NumInput("p")
 ],
-    group="distributions.binomial"
+    name="distributions.binomial.cumulative"
 )
 def binomial_dist_cuml(x, n, p):
     return sum([binomial_dist(i, n, p) for i in range(0, x + 1)])
-
-
-def _description_hypergeo_dist():
-    return ("x", int), ("N", int), ("n", int), ("k", int)
 
 
 @register_formula([
@@ -79,7 +75,7 @@ def _description_hypergeo_dist():
     IntInput("N"),
     IntInput("n"),
     IntInput("k")
-], group="distributions")
+], name="distributions.hyper geometric")
 def hypergeo_dist(x, N, n, k):
     return math.comb(k, x) * math.comb(N - k, n - x) / math.comb(N, n)
 
@@ -88,7 +84,7 @@ def hypergeo_dist(x, N, n, k):
     IntInput("x"),
     IntInput("k"),
     NumInput("p")
-], group="distributions.binomial")
+], name="distributions.binomial.inverse")
 def inv_binomial(x, k, p):
     return math.comb(x - 1, k - 1) * (p ** k) * ((1 - p) ** (x - k))
 
@@ -96,7 +92,7 @@ def inv_binomial(x, k, p):
 @register_formula([
     IntInput("x"),
     NumInput("mu"),
-], group="distributions.poisson")
+], name="distributions.poisson.poisson")
 def poisson_dist(x, m):
     return math.exp(-m) * (m ** x) / math.factorial(x)
 
@@ -104,7 +100,7 @@ def poisson_dist(x, m):
 @register_formula([
     IntInput("x"),
     NumInput("mu"),
-], group="distributions.poisson")
+], name="distributions.poisson.cumulative")
 def poisson_dist_cuml(x, m):
     return sum([poisson_dist(i, m) for i in range(0, x + 1)])
 
@@ -112,7 +108,7 @@ def poisson_dist_cuml(x, m):
 @register_formula([
     NumInput("z_lower", optional=True),
     NumInput("z_upper", optional=True)
-], group="distributions.normal")
+], name="distributions.normal.cumulative")
 def std_normal_dist_cuml(z_low, z_end):
     if z_low is None and z_end is None:
         print("Lower and upper bounds can't both be None")
@@ -124,7 +120,7 @@ def std_normal_dist_cuml(z_low, z_end):
     return norm.cdf(z_end) - norm.cdf(z_low)
 
 
-@register_formula([NumInput("percent below z")], group="distributions.normal")
+@register_formula([NumInput("percent below z")], name="distributions.normal.inverse")
 def cdf_to_z_values(cdf):
     return norm.ppf(cdf)
 
@@ -138,6 +134,30 @@ def gamma_func(x, a):
         return gamma(a)
     else:
         return gammainc(a, x) * gamma(a)
+
+
+@register_formula([
+    IntInput("v"),
+    NumInput("alpha")
+], name="distributions.chi2.inverse")
+def inv_chi2_distribution(v, a):
+    return chi2.ppf(a, v)
+
+
+@register_formula([
+    IntInput("v"),
+    NumInput("lower_bound", optional=True),
+    NumInput("upper_bound", optional=True)
+], name="distributions.chi2.cumulative")
+def chi2_cuml(v, lower, upper):
+    if lower is None and upper is None:
+        print("Lower and upper bounds can't both be None")
+        return
+    if lower is None:
+        return chi2.cdf(upper, v)
+    if upper is None:
+        return 1 - chi2.cdf(lower, v)
+    return chi2.cdf(upper, v) - chi2.cdf(lower, v)
 
 
 if __name__ == "__main__":
