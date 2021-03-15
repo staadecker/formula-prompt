@@ -1,7 +1,7 @@
 from formula_prompt import *
 
 import math
-from scipy.stats import norm, chi2
+from scipy import stats
 from scipy.special import gamma, gammainc
 
 """
@@ -114,15 +114,15 @@ def std_normal_dist_cuml(z_low, z_end):
         print("Lower and upper bounds can't both be None")
         return
     if z_low is None:
-        return norm.cdf(z_end)
+        return stats.norm.cdf(z_end)
     if z_end is None:
-        return 1 - norm.cdf(z_low)
-    return norm.cdf(z_end) - norm.cdf(z_low)
+        return 1 - stats.norm.cdf(z_low)
+    return stats.norm.cdf(z_end) - stats.norm.cdf(z_low)
 
 
 @register_formula([NumInput("percent below z")], name="distributions.normal.inverse")
 def cdf_to_z_values(cdf):
-    return norm.ppf(cdf)
+    return stats.norm.ppf(cdf)
 
 
 @register_formula([
@@ -141,7 +141,7 @@ def gamma_func(x, a):
     NumInput("alpha")
 ], name="distributions.chi2.inverse")
 def inv_chi2_distribution(v, a):
-    return chi2.ppf(a, v)
+    return stats.chi2.ppf(1 - a, v)
 
 
 @register_formula([
@@ -154,10 +154,34 @@ def chi2_cuml(v, lower, upper):
         print("Lower and upper bounds can't both be None")
         return
     if lower is None:
-        return chi2.cdf(upper, v)
+        return stats.chi2.cdf(upper, v)
     if upper is None:
-        return 1 - chi2.cdf(lower, v)
-    return chi2.cdf(upper, v) - chi2.cdf(lower, v)
+        return 1 - stats.chi2.cdf(lower, v)
+    return stats.chi2.cdf(upper, v) - stats.chi2.cdf(lower, v)
+
+
+@register_formula([
+    NumInput("v"),
+    NumInput("alpha")
+], name="distributions.t.inverse")
+def inverse_t_dist(v, a):
+    return stats.t.ppf(1 - a, v)
+
+
+@register_formula([
+    IntInput("v"),
+    NumInput("lower_bound", optional=True),
+    NumInput("upper_bound", optional=True)
+], name="distributions.t.cumulative")
+def t_dist_cuml(v, lower, upper):
+    if lower is None and upper is None:
+        print("Lower and upper bounds can't both be None")
+        return
+    if lower is None:
+        return stats.t.cdf(upper, v)
+    if upper is None:
+        return 1 - stats.t.cdf(lower, v)
+    return stats.t.cdf(upper, v) - stats.t.cdf(lower, v)
 
 
 if __name__ == "__main__":

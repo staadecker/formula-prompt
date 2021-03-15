@@ -79,7 +79,7 @@ class _Group:
         while True:
             should_leave = self.select_element().run()
 
-            if not self.is_root or should_leave:
+            if should_leave:
                 break
 
     def add_formula(self, formula, path=None, depth=0):
