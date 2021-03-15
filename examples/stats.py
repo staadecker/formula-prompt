@@ -162,6 +162,25 @@ def t_dist_cuml(v, lower, upper):
     return evaluate_cumulative_distribution(stats.t, lower, upper, v)
 
 
+@register_formula([
+    IntInput("v1"),
+    IntInput("v2"),
+    NumInput("lower_bound", optional=True),
+    NumInput("upper_bound", optional=True)
+], name="distributions.f.cumulative")
+def f_dist_cuml(v1, v2, lower, upper):
+    return evaluate_cumulative_distribution(stats.f, lower, upper, v1, v2)
+
+
+@register_formula([
+    IntInput("v1"),
+    IntInput("v2"),
+    NumInput("alpha")
+], name="distributions.f.inverse")
+def f_dist_cuml(v1, v2, a):
+    return stats.f.ppf(1 - a, v1, v2)
+
+
 def evaluate_cumulative_distribution(distribution: stats.rv_continuous, lower, upper, *args):
     """
     Find the area between lower and upper in a scipy.stats continuous random variable
