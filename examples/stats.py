@@ -120,9 +120,9 @@ def std_normal_dist_cuml(z_low, z_end):
     return stats.norm.cdf(z_end) - stats.norm.cdf(z_low)
 
 
-@register_formula([NumInput("percent below z")], name="distributions.normal.inverse")
-def cdf_to_z_values(cdf):
-    return stats.norm.ppf(cdf)
+@register_formula([NumInput("alpha")], name="distributions.normal.inverse")
+def cdf_to_z_values(a):
+    return stats.norm.ppf(1 - a)
 
 
 @register_formula([
