@@ -1,16 +1,15 @@
+"""
+File containing a suite of statistics functions, some of which simply wrap statistical functions
+from the 'scipy' library.
+
+We use the 'formula_prompt' package to access and evaluate these functions in the terminal.
+"""
+
 from formula_prompt import *
 
 import math
 from scipy import stats
 from scipy.special import gamma, gammainc
-
-"""
-Stats class contains all the functions that this program offers. Namely,
-
-mean, median, sample_variance, sample_std (sample standard deviation) and sort.
-
-These methods are very straight forward, they take in a list and return the result.
-"""
 
 
 @register_formula(ListInput(), name="sample.mean")
@@ -55,7 +54,7 @@ def sort(x):
 ],
     name="distributions.binomial.binomial"
 )
-def binomial_dist(x, n, p):
+def binomial_distribution(x, n, p):
     return math.comb(n, x) * (p ** x) * ((1 - p) ** (n - x))
 
 
@@ -66,8 +65,8 @@ def binomial_dist(x, n, p):
 ],
     name="distributions.binomial.cumulative"
 )
-def binomial_dist_cuml(x, n, p):
-    return sum([binomial_dist(i, n, p) for i in range(0, x + 1)])
+def binomial_distribution_cumulative(x, n, p):
+    return sum([binomial_distribution(i, n, p) for i in range(0, x + 1)])
 
 
 @register_formula([
@@ -76,7 +75,7 @@ def binomial_dist_cuml(x, n, p):
     IntInput("n"),
     IntInput("k")
 ], name="distributions.hyper geometric")
-def hypergeo_dist(x, N, n, k):
+def hyper_geometric_dist(x, N, n, k):
     return math.comb(k, x) * math.comb(N - k, n - x) / math.comb(N, n)
 
 
@@ -109,15 +108,8 @@ def poisson_dist_cuml(x, m):
     NumInput("z_lower", optional=True),
     NumInput("z_upper", optional=True)
 ], name="distributions.normal.cumulative")
-def std_normal_dist_cuml(z_low, z_end):
-    if z_low is None and z_end is None:
-        print("Lower and upper bounds can't both be None")
-        return
-    if z_low is None:
-        return stats.norm.cdf(z_end)
-    if z_end is None:
-        return 1 - stats.norm.cdf(z_low)
-    return stats.norm.cdf(z_end) - stats.norm.cdf(z_low)
+def std_normal_dist_cuml(lower, upper):
+    return evaluate_cumulative_distribution(stats.norm, lower, upper)
 
 
 @register_formula([NumInput("alpha")], name="distributions.normal.inverse")
@@ -150,14 +142,7 @@ def inv_chi2_distribution(v, a):
     NumInput("upper_bound", optional=True)
 ], name="distributions.chi2.cumulative")
 def chi2_cuml(v, lower, upper):
-    if lower is None and upper is None:
-        print("Lower and upper bounds can't both be None")
-        return
-    if lower is None:
-        return stats.chi2.cdf(upper, v)
-    if upper is None:
-        return 1 - stats.chi2.cdf(lower, v)
-    return stats.chi2.cdf(upper, v) - stats.chi2.cdf(lower, v)
+    return evaluate_cumulative_distribution(stats.chi2, lower, upper, v)
 
 
 @register_formula([
@@ -174,14 +159,21 @@ def inverse_t_dist(v, a):
     NumInput("upper_bound", optional=True)
 ], name="distributions.t.cumulative")
 def t_dist_cuml(v, lower, upper):
+    return evaluate_cumulative_distribution(stats.t, lower, upper, v)
+
+
+def evaluate_cumulative_distribution(distribution: stats.rv_continuous, lower, upper, *args):
+    """
+    Find the area between lower and upper in a scipy.stats continuous random variable
+    """
     if lower is None and upper is None:
         print("Lower and upper bounds can't both be None")
         return
     if lower is None:
-        return stats.t.cdf(upper, v)
+        return distribution.cdf(upper, *args)
     if upper is None:
-        return 1 - stats.t.cdf(lower, v)
-    return stats.t.cdf(upper, v) - stats.t.cdf(lower, v)
+        return 1 - distribution.cdf(lower, *args)
+    return distribution.cdf(upper, *args) - distribution.cdf(lower, *args)
 
 
 if __name__ == "__main__":
