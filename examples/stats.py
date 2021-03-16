@@ -1,10 +1,11 @@
 """
-File containing a suite of statistics functions, some of which simply wrap statistical functions
-from the 'scipy' library.
+File containing a suite of statistics functions, some of which simply wrap the scipy library.
 
-I use the 'formula_prompt' package (that I wrote) to access and evaluate these functions in the terminal.
+I use the 'formula_prompt' package to access and evaluate these functions in the terminal.
 The @register_formula decorator is used to register the function with the formula_prompt package.
 More information about this package can be found at https://pypi.org/project/formula-prompt/.
+
+Note that the formula names are indicated in @register_formula(..., name=<>).
 """
 
 from formula_prompt import *
@@ -16,36 +17,44 @@ from scipy.special import gamma, gammainc
 
 @register_formula(ListInput(), name="sample.mean")
 def mean(x):
+    """Find the mean of a sample by summing the values and dividing by the size of the sample."""
     return sum(x) / len(x)
 
 
 @register_formula(ListInput(), name="sample.median")
 def median(x):
-    x = sorted(x)
+    """Find the median of a sample by sorting the sample and then returning the middle element."""
+    x = sorted(x)  # Sort the sample
     n = len(x)
+    middle = n // 2
     if n % 2 == 0:
-        return (x[n // 2 - 1] + x[n // 2]) / 2
+        # If there's an even number of elements, the median is an average of the two middle values
+        return 0.5 * (x[middle - 1] + x[middle])
     else:
-        return x[n // 2]
+        # If there's an odd number of elements, the median is the middle element
+        return x[middle]
 
 
 @register_formula(ListInput(), name="sample.variance")
 def sample_variance(x):
+    """Find the variance of a sample by summing (x-mean)^2 over each element x, then dividing by (n-1)"""
     n = len(x)
     m = mean(x)
-    s = 0
-    for e in x:
-        s += (e - m) ** 2
-    return s / (n - 1)
+    s = 0  # s is our sum
+    for xi in x:  # For every element xi in sample x
+        s += (xi - m) ** 2  # Add (xi - m)**2 to our sum s
+    return s / (n - 1)  # Then divide the sum by n-1
 
 
 @register_formula(ListInput(), name="sample.std")
 def sample_std(x):
+    """Find the sample standard deviation by taking the square root of the sample variance."""
     return math.sqrt(sample_variance(x))
 
 
-@register_formula(ListInput())
+@register_formula(ListInput(), name="sort")
 def sort(x):
+    """Return the sample x in increasing order."""
     return sorted(x)
 
 
@@ -57,6 +66,14 @@ def sort(x):
     name="distributions.binomial.binomial"
 )
 def binomial_distribution(x, n, p):
+    """
+    Evaluate the binomial distribution b(x; n, p) as defined in the textbook.
+
+    Equivalent to finding the probability of getting x heads when flipping
+    a coin n times and the likeliness of getting heads on any one flip is p.
+
+    The equation used is nCx * p ^ x * (1-p) ^ (n-x).
+    """
     return math.comb(n, x) * (p ** x) * ((1 - p) ** (n - x))
 
 
@@ -68,6 +85,14 @@ def binomial_distribution(x, n, p):
     name="distributions.binomial.cumulative"
 )
 def binomial_distribution_cumulative(x, n, p):
+    """
+    Evaluate the cumulative binomial distribution B(x; n, p).
+
+    Equivalent to finding the probability of getting between 0 and x heads
+    when flipping a coin n times and the likeliness of getting heads on any one flip is p.
+
+    Found by summing the binomial distribution from 0 up to x.
+    """
     return sum([binomial_distribution(i, n, p) for i in range(0, x + 1)])
 
 
@@ -76,8 +101,16 @@ def binomial_distribution_cumulative(x, n, p):
     IntInput("N"),
     IntInput("n"),
     IntInput("k")
-], name="distributions.hyper geometric")
-def hyper_geometric_dist(x, N, n, k):
+], name="distributions.hypergeometric")
+def hypergeometric_dist(x, N, n, k):
+    """
+    Evaluate the hypergeometric distribution h(x; N, n, k) as defined in the textbook.
+
+    Equivalent to the probability of getting x blue socks when picking n socks from a total
+    of N socks where a total of k socks are blue.
+
+    Found with the equation kCx * (N-k)C(n-x) / NCn
+    """
     return math.comb(k, x) * math.comb(N - k, n - x) / math.comb(N, n)
 
 
@@ -85,8 +118,16 @@ def hyper_geometric_dist(x, N, n, k):
     IntInput("x"),
     IntInput("k"),
     NumInput("p")
-], name="distributions.binomial.inverse")
-def inv_binomial(x, k, p):
+], name="distributions.negative_binomial")
+def negative_binomial(x, k, p):
+    """
+    Evaluate the negative binomial distribution b*(x; k, p) as defined in the textbook.
+
+    Equivalent to finding the probability of coin flip x to be the k-th head when the
+    probability of getting a head on any one coin flip is p.
+
+    Found with the equation (x-1)C(k-1) * p^k * (1 - p)^(x - k)
+    """
     return math.comb(x - 1, k - 1) * (p ** k) * ((1 - p) ** (x - k))
 
 
@@ -95,6 +136,12 @@ def inv_binomial(x, k, p):
     NumInput("mu"),
 ], name="distributions.poisson.poisson")
 def poisson_dist(x, m):
+    """
+    Evaluate the poisson distribution p(x; m) where x is the number
+    of outcomes that occur in a given interval and m is the mean
+    of the distribution (which equals the rate of occurrence times
+    the size of the interval).
+    """
     return math.exp(-m) * (m ** x) / math.factorial(x)
 
 
@@ -102,31 +149,51 @@ def poisson_dist(x, m):
     IntInput("x"),
     NumInput("mu"),
 ], name="distributions.poisson.cumulative")
-def poisson_dist_cuml(x, m):
+def poisson_dist_cumulative(x, m):
+    """
+    Evaluate the cumulative poisson distribution P(x; m) by summing the
+    poisson distribution (defined above) from 0 up to x (inclusive).
+    """
     return sum([poisson_dist(i, m) for i in range(0, x + 1)])
 
 
 @register_formula([
-    NumInput("z_lower", optional=True),
-    NumInput("z_upper", optional=True)
+    NumInput("lower bound", optional=True),
+    NumInput("upper bound", optional=True)
 ], name="distributions.normal.cumulative")
-def std_normal_dist_cuml(lower, upper):
-    return evaluate_cumulative_distribution(stats.norm, lower, upper)
+def std_normal_dist_cumulative(lower, upper):
+    """
+    Find the area under the standard normal distribution between
+    the lower and upper bounds.
+
+    Bounds that aren't specified are taken at infinity.
+    """
+    return find_distribution_area(stats.norm, lower, upper)
 
 
 @register_formula([NumInput("alpha")], name="distributions.normal.inverse")
-def cdf_to_z_values(a):
+def normal_dist_inverse(a):
+    """
+    Given an area 'a', return the z-value that if taken as a lower bound
+    results in the standard normal distribution having 'a' area above it.
+    """
     return stats.norm.ppf(1 - a)
 
 
 @register_formula([
     NumInput("lower incomplete", optional=True),
     NumInput("alpha")
-])
+], name="gamma_function")
 def gamma_func(x, a):
+    """
+    Evaluate the incomplete gamma function with parameter alpha (a) up to x.
+    If x is not specified, evaluate the complete gamma function (up to infinity).
+    """
     if x is None:
         return gamma(a)
     else:
+        # gammainc is regularized (i.e. divided by gamma(a)) which is why we must multiply
+        # by gamma(a) to get the true value of the integral.
         return gammainc(a, x) * gamma(a)
 
 
@@ -135,6 +202,10 @@ def gamma_func(x, a):
     NumInput("alpha")
 ], name="distributions.chi2.inverse")
 def inv_chi2_distribution(v, a):
+    """
+    Given an area 'a', return the value that if taken as a lower bound
+    results in the chi-square distribution with v degrees of freedom having 'a' area above it.
+    """
     return stats.chi2.ppf(1 - a, v)
 
 
@@ -144,7 +215,13 @@ def inv_chi2_distribution(v, a):
     NumInput("upper_bound", optional=True)
 ], name="distributions.chi2.cumulative")
 def chi2_cuml(v, lower, upper):
-    return evaluate_cumulative_distribution(stats.chi2, lower, upper, v)
+    """
+    Find the area between the lower and upper bounds and
+    under the chi-squared distribution with v degrees of freedom.
+
+    Bounds that aren't specified are taken at infinity.
+    """
+    return find_distribution_area(stats.chi2, lower, upper, v)
 
 
 @register_formula([
@@ -152,6 +229,10 @@ def chi2_cuml(v, lower, upper):
     NumInput("alpha")
 ], name="distributions.t.inverse")
 def inverse_t_dist(v, a):
+    """
+    Given an area 'a', return the value that if taken as a lower bound
+    results in the student t distribution with v degrees of freedom having 'a' area above it.
+    """
     return stats.t.ppf(1 - a, v)
 
 
@@ -161,7 +242,13 @@ def inverse_t_dist(v, a):
     NumInput("upper_bound", optional=True)
 ], name="distributions.t.cumulative")
 def t_dist_cuml(v, lower, upper):
-    return evaluate_cumulative_distribution(stats.t, lower, upper, v)
+    """
+    Find the area between the lower and upper bounds and
+    under the t-distribution with v degrees of freedom.
+
+    Bounds that aren't specified are taken at infinity.
+    """
+    return find_distribution_area(stats.t, lower, upper, v)
 
 
 @register_formula([
@@ -171,7 +258,15 @@ def t_dist_cuml(v, lower, upper):
     NumInput("upper_bound", optional=True)
 ], name="distributions.f.cumulative")
 def f_dist_cuml(v1, v2, lower, upper):
-    return evaluate_cumulative_distribution(stats.f, lower, upper, v1, v2)
+    """
+    Find the area under the F-distribution between
+    the lower and upper bounds given that the
+    F-distribution is comparing two chi-squared
+    random variables with v1 and v2 degrees of freedom.
+
+    Bounds that aren't specified are taken at infinity.
+    """
+    return find_distribution_area(stats.f, lower, upper, v1, v2)
 
 
 @register_formula([
@@ -179,11 +274,15 @@ def f_dist_cuml(v1, v2, lower, upper):
     IntInput("v2"),
     NumInput("alpha")
 ], name="distributions.f.inverse")
-def f_dist_cuml(v1, v2, a):
+def f_dist_inverse(v1, v2, a):
+    """
+    Given an area 'a', return the value that if taken as a lower bound
+    results in the F-distribution with parameters v1 and v2 having 'a' area above it.
+    """
     return stats.f.ppf(1 - a, v1, v2)
 
 
-def evaluate_cumulative_distribution(distribution: stats.rv_continuous, lower, upper, *args):
+def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args):
     """
     Find the area between the lower and upper bounds of a scipy.stats continuous random variable distribution.
     """
@@ -202,4 +301,5 @@ def evaluate_cumulative_distribution(distribution: stats.rv_continuous, lower, u
 
 
 if __name__ == "__main__":
+    # Start the prompt used to evaluate the functions.
     launch_prompt()
