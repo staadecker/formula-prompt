@@ -7,76 +7,66 @@ needing a computer.
 
 ## Example
 
-Here's how you define formulas to find the
-volume of a cube and rectangular prism.
+Here I define two formulas. Notice the `@register_formula(...)` decorator
+that registers the formulas with the library.
 
 ```python
 from formula_prompt import *
 
-# 1. Define your formulas
 @register_formula([NumInput("side length")])
 def volume_of_cube(s):
-    return s ** 3
+  return s ** 3
 
-@register_formula([
-    NumInput("length"),
-    NumInput("width"),
-    NumInput("height")
-])
-def volume_of_rectangular_prism(length, width, height):
-    return length * width * height
-
-# 2. Start the command line prompt
+@register_formula([NumInput("length"), NumInput("width")])
+def area_of_rectangle(length, width):
+  return length * width
+```
+Now that the library has registered the formulas, I can launch the prompt.
+```
 launch_prompt()
 ```
 
-When you run this file, a prompt will let you evaluate your
-formulas. Here's what it looks like!
+The prompt lets you pick a formula and evaluate it.
 
 ```
-0:	volume_of_cube
-1:	volume_of_rectangular_prism
+0:	area_of_rectangle
+1:	volume_of_cube
+2:	quit
 Pick a formula:
->>> 0
+>>> 1
 Input side length:
->>> 2
+>>> 3
 volume_of_cube:
-8.0
-
-Press enter to run again...
->>> 
+27.0
 ```
 
-For more examples, look at the `examples` folder on GitHub.
+For more examples, look at the [`/examples`](/examples) folder on GitHub.
 
-## Usage details
+## How to use this library
 
-### Installation
+1. Install the library by running: `pip install formula-prompt`
 
-Simply run: `pip install formula-prompt`
+2. Write your formulas (see example above).
 
-### Setting up your code
+3. Add the `@register_formula(...)` decorator (see below).
 
-To use this library:
+4. Call `launch_prompt()`.
 
-1. Define your functions for each of your formulas.
-   Don't worry about reading user input, this is handled by the library!
-   
-
-2. Add the `@register_formula(...)` decorator to your function. This will
-register you function will the library.
-
-   
-3. Run `launch_prompt()` to start the prompt.
 
 ### Using `@register_formula(...)`
 
-This is where the good stuff happens!
+`@register_formula(...)` is a decorator that takes in a few parameters.
 
-`@register_formula(...)` is a decorator that takes in a list
-of objects that describe the inputs to your formula.
 
-These objects can be instance of the following classes:
+name | Required | Description
+--- | --- | ---
+`func_inputs` | Yes | A list of objects describing the inputs to your formula (see allowed formula inputs section below).
+`decimal_places` | No. Defaults to 4. | Decimal places to round the results of your formula to. Specify `None` to disable rounding.
+`name` | No. Defaults to the function name. | Lets you set the name that will be displayed in the prompt. Names containing dots (`.`) will be considered folders. For example, `volumes.cube` will place the formula in a `volumes` folder and display the formula as `cube`.
+
+### Allowed formula inputs
+
+You can specify three types of inputs.
 
 - `NumInput`: For inputs that accepts a single floating-point number.
 
@@ -90,29 +80,13 @@ You can use `optional=True` to allow skipping the input (this will pass `None`
 to your function).
 
 Here's an example.
-```
+```python
 @register_formula([
     IntInput("first optional input", optional=True),
     NumInput("second non-optional input")
 ])
-def some_funtion(...):
+def some_funtion(first_integer_input, second_float_input):
     ...
 ```
 
-### Advanced details
-
-- If `ListInput`, `IntInput` or `NumInput` don't meet your needs, you can
-define a custom class that inherits from `Input` and implements `process()`.
-  Look at how `NumInput` is implemented for an example.
-
-
-- You can specify the number of decimals to round the result to by 
-  either a) overwriting the
-global variable `DEFAULT_NUMBER_OF_DECIMALS` or by b) passing`decimal_places=`
-  as an argument to the `@register_function(...)` decorator. To not round
-  the result, set the argument to `None`.
-  
-
-- If your function only has one input, you don't need to pass in a list.
-For example, `@register_formula(NumInput("x"))` works the same as
-  `@register_formula([NumInput("x")])`
+You can also make a custom input type by creating a class that inherits from `Inputs`. See [`inputs.py`](/formula_prompt/inputs.py).

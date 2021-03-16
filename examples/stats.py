@@ -2,7 +2,9 @@
 File containing a suite of statistics functions, some of which simply wrap statistical functions
 from the 'scipy' library.
 
-We use the 'formula_prompt' package to access and evaluate these functions in the terminal.
+I use the 'formula_prompt' package (that I wrote) to access and evaluate these functions in the terminal.
+The @register_formula decorator is used to register the function with the formula_prompt package.
+More information about this package can be found at https://pypi.org/project/formula-prompt/.
 """
 
 from formula_prompt import *
@@ -183,15 +185,19 @@ def f_dist_cuml(v1, v2, a):
 
 def evaluate_cumulative_distribution(distribution: stats.rv_continuous, lower, upper, *args):
     """
-    Find the area between lower and upper in a scipy.stats continuous random variable
+    Find the area between the lower and upper bounds of a scipy.stats continuous random variable distribution.
     """
+    # Verify that either lower or upper is specified
     if lower is None and upper is None:
         print("Lower and upper bounds can't both be None")
         return
+    # If lower is not specified we want to find the area below upper
     if lower is None:
         return distribution.cdf(upper, *args)
+    # If upper is not specified we want to find the are above lower
     if upper is None:
         return 1 - distribution.cdf(lower, *args)
+    # Otherwise we find the area between the lower and upper bounds
     return distribution.cdf(upper, *args) - distribution.cdf(lower, *args)
 
 
