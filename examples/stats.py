@@ -63,7 +63,7 @@ def sort(x):
     IntInput("n"),
     NumInput("p")
 ],
-    name="distributions.binomial.binomial"
+    name="distributions.binomial"
 )
 def binomial_distribution(x, n, p):
     """
@@ -133,8 +133,21 @@ def negative_binomial(x, k, p):
 
 @register_formula([
     IntInput("x"),
+    IntInput("k"),
+    NumInput("p")
+], name="distributions.negative_binomial.cumulative")
+def negative_binomial_cumulative(x, k, p):
+    """
+    Evaluate the cumulative negative binomial distribution by summing
+    the negative binomial distribution from k to x (inclusive).
+    """
+    return sum([negative_binomial(xi, k, p) for xi in range(k, x + 1)])
+
+
+@register_formula([
+    IntInput("x"),
     NumInput("mu"),
-], name="distributions.poisson.poisson")
+], name="distributions.poisson")
 def poisson_dist(x, m):
     """
     Evaluate the poisson distribution p(x; m) where x is the number
@@ -181,10 +194,10 @@ def normal_dist_inverse(a):
 
 
 @register_formula([
-    NumInput("lower incomplete", optional=True),
-    NumInput("alpha")
+    NumInput("alpha"),
+    NumInput("upper bound", optional=True)
 ], name="gamma_function")
-def gamma_func(x, a):
+def gamma_func(a, x):
     """
     Evaluate the incomplete gamma function with parameter alpha (a) up to x.
     If x is not specified, evaluate the complete gamma function (up to infinity).
@@ -195,6 +208,28 @@ def gamma_func(x, a):
         # gammainc is regularized (i.e. divided by gamma(a)) which is why we must multiply
         # by gamma(a) to get the true value of the integral.
         return gammainc(a, x) * gamma(a)
+
+
+@register_formula([
+    NumInput("x"),
+    NumInput("alpha"),
+    NumInput("beta")
+], name="distributions.gamma")
+def gamma_dist(x, a, b):
+    """
+    Evaluate the gamma distribution with parameters alpha and beta as defined in the textbook.
+    """
+    return stats.gamma.pdf(x, a, scale=b)
+
+
+@register_formula([
+    NumInput("lower bound", optional=True),
+    NumInput("upper bound", optional=True),
+    NumInput("alpha"),
+    NumInput("beta")
+], name="distributions.gamma.cumulative")
+def gamma_dist(lower, upper, a, b):
+    return find_distribution_area(stats.gamma, lower, upper, a, scale=b)
 
 
 @register_formula([
@@ -282,22 +317,22 @@ def f_dist_inverse(v1, v2, a):
     return stats.f.ppf(1 - a, v1, v2)
 
 
-def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args):
+def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args, **kwargs):
     """
     Find the area between the lower and upper bounds of a scipy.stats continuous random variable distribution.
     """
     # Verify that either lower or upper is specified
     if lower is None and upper is None:
         print("Lower and upper bounds can't both be None")
-        return
+        raise UserInputError
     # If lower is not specified we want to find the area below upper
     if lower is None:
-        return distribution.cdf(upper, *args)
+        return distribution.cdf(upper, *args, **kwargs)
     # If upper is not specified we want to find the are above lower
     if upper is None:
-        return 1 - distribution.cdf(lower, *args)
+        return 1 - distribution.cdf(lower, *args, **kwargs)
     # Otherwise we find the area between the lower and upper bounds
-    return distribution.cdf(upper, *args) - distribution.cdf(lower, *args)
+    return distribution.cdf(upper, *args, **kwargs) - distribution.cdf(lower, *args, **kwargs)
 
 
 if __name__ == "__main__":

@@ -91,27 +91,36 @@ class _Folder:
 
     def run(self):
         while True:
-            # Let the user pick an element and then run that element
-            should_leave = self.pick_element().run()
+            # If there's only one element, select that element to run
+            if len(self.contents) == 1:
+                element_to_run = next(iter(self.contents))
+            # Otherwise let the user pick
+            else:
+                element_to_run = self.pick_element()
+
+            # Run the element
+            should_leave = element_to_run.run()
 
             # If we should leave break (which returns to parent folder)
-            if should_leave:
+            # Also if there was only one element break otherwise we have an
+            # infinite loop
+            if should_leave or len(self.contents) <= 1:
                 break
 
     def add_formula(self, formula: Formula, path=None, depth=0):
         """
-        Add a formula to the folder. Gets called recursiely if the formula lives in a nested folder.
+        Add a formula to the folder. Gets called recursively if the formula lives in a nested folder.
 
         :param formula: The Formula to add
         :param path: A list of the names of all the folders and the formula
         :param depth: Current position in the list (how deep we are in the nested folders)
         """
-        # If path isn't set, we create it by spliting the name at the dots ('.')
+        # If path isn't set, we create it by splitting the name at the dots ('.')
         if path is None:
             path = formula.name.split(".")
 
         # If we're at the end of the path (no more nested folders) we add the formula the current folder (self)
-        if depth == len(path) - 1:
+        if depth == len(path):
             self.contents.add(formula)
             return
 
