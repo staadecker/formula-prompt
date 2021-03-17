@@ -2,7 +2,7 @@
 File containing a suite of statistics functions, some of which simply wrap the scipy library.
 
 I use the 'formula_prompt' package to access and evaluate these functions in the terminal.
-The @register_formula decorator is used to register the function with the formula_prompt package.
+The @register_formula decorator is used to register my formulas with the package.
 More information about this package can be found at https://pypi.org/project/formula-prompt/.
 
 Note that the formula names are indicated in @register_formula(..., name=<>).
