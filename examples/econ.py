@@ -46,12 +46,6 @@ def annuity_factor(N, r):
     print("P/A= %.7f" % factor)
     print("A/P= %.7f" % (1 / factor))
 
-
-@register_formula([])
-def _description_geometric_factor():
-    return ("number of periods", float), ("rate (percent)", float), ("gradient rate (percent)", float)
-
-
 @register_formula([
     NumInput("number of periods"),
     NumInput("rate (percent)"),
