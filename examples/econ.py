@@ -50,13 +50,22 @@ def annuity_factor(N, r):
     NumInput("number of periods"),
     NumInput("rate (percent)"),
     NumInput("gradient rate (percent)")
-])
+], name="factors.geometric gradient")
 def geometric_factor(N, i, g):
     i /= 100
     g /= 100
     factor = (((1 + g) / (1 + i)) ** N - 1) / (g - i)
     print("P/geom= %.7f" % factor)
     print("geom/P= %.7f" % (1 / factor))
+
+
+@register_formula([
+    PercentInput("tax rate"),
+    PercentInput("CCA (depreciation) rate"),
+    PercentInput("interest rate (normally after-tax MARR/IRR)")
+], name="factors.t_db")
+def tax_depreciation_factor(t, d, i):
+    return t * d / (i + d)
 
 
 if __name__ == "__main__":

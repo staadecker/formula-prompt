@@ -5,12 +5,7 @@ class Input:
     """
     A parent class that can be extended to allow for different types of inputs to a formula.
 
-    Important functions:
-
-    read() -- Called by the program to retrieve the input value from the user.
-
-    process() -- Function to be overridden by subclasses. Should read from input() and return
-            the parsed value that will be passed on to the formula.
+    Important functions are read() and process()
     """
 
     def __init__(self, name, optional=False):
@@ -26,11 +21,16 @@ class Input:
         self.optional = optional
 
     def read(self):
+        """Called by the program to retrieve the input value from the user."""
         # Print "Input <name>: " or "Input data: " if name isn't defined.
         print("Input {}:".format(self.name if self.name is not None else "data"))
         return self.process()
 
     def process(self):
+        """
+        Function to be overridden by subclasses. Should read from input() and return
+        the parsed value that will be passed on to the formula.
+        """
         raise NotImplemented("Please use a subclass of Input such as NumInput or ListInput")
 
 
@@ -51,6 +51,30 @@ class NumInput(Input):
                     return float(i)
             except ValueError as e:
                 if self.optional and i == "":
+                    return None
+                print("Invalid number. Try again.")
+        raise UserInputError
+
+
+class PercentInput(Input):
+    """Input that accepts a percent value as either a decimal or a percent."""
+
+    def __init__(self, name="number (percent)", **kwargs):
+        super(PercentInput, self).__init__(name=name, **kwargs)
+
+    def process(self):
+        for _ in range(MAX_ENTRY_ATTEMPTS):
+            try:
+                str_i = input(">>> ")
+                float_i = float(str_i)
+                if 0 <= float_i <= 1:
+                    return float_i
+                elif 1 <= float_i <= 100:
+                    return float_i / 100
+                else:
+                    print("Invalid percent. Try again.")
+            except ValueError as e:
+                if self.optional and str_i == "":
                     return None
                 print("Invalid number. Try again.")
         raise UserInputError
