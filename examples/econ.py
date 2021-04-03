@@ -31,7 +31,7 @@ def find_yield(P, A, N, F):
             if increasing:
                 increment /= 2
             increasing = False
-        print(y)
+        # print(y)
 
     print(f"yield rate: %.3f +/- %.4f %%" % (y * 100, threshold * 100))
 
@@ -43,8 +43,7 @@ def find_yield(P, A, N, F):
 def annuity_factor(N, r):
     r /= 100
     factor = (1 - (1 + r) ** (-N)) / r
-    print("P/A= %.7f" % factor)
-    print("A/P= %.7f" % (1 / factor))
+    return {"P/A": factor, "A/P": 1 / factor}
 
 @register_formula([
     NumInput("number of periods"),
@@ -55,17 +54,16 @@ def geometric_factor(N, i, g):
     i /= 100
     g /= 100
     factor = (((1 + g) / (1 + i)) ** N - 1) / (g - i)
-    print("P/geom= %.7f" % factor)
-    print("geom/P= %.7f" % (1 / factor))
+    return {"P/geom": factor, "geom/P": 1 / factor}
 
 
 @register_formula([
-    PercentInput("tax rate"),
-    PercentInput("CCA (depreciation) rate"),
-    PercentInput("interest rate (normally after-tax MARR/IRR)")
-], name="factors.t_db")
-def tax_depreciation_factor(t, d, i):
-    return t * d / (i + d)
+    PercentInput("tax rate (t)"),
+    PercentInput("CCA (depreciation) rate (d)"),
+    PercentInput("interest rate (normally after-tax MARR/IRR) (i)")
+], name="factors.CRF/CTF")
+def tax_factors(t, d, i):
+    return {"CRF": 1 - t * d / (i + d), "CTF": 1 - t * d / (i + d) * (1 + i / 2) / (1 + i)}
 
 
 if __name__ == "__main__":
