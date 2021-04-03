@@ -37,10 +37,16 @@ def register_formula(func_inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, na
         def inner_function(*args, **kwargs):
             result = func(*args, **kwargs)  # Call the function
 
-            # Round the result
-            if decimal_places is not None and isinstance(result, float) and not math.isnan(result):
-                multiplier = 10 ** decimal_places
-                result = round(result * multiplier) / multiplier
+            if decimal_places is not None:
+                # Round the result if the result is a float
+                if isinstance(result, float) and not math.isnan(result):
+                    result = round(result, ndigits=decimal_places)
+
+                # Round the result if the result is a dict
+                elif isinstance(result, dict):
+                    for key, val in result.items():
+                        if isinstance(val, float) and not math.isnan(val):
+                            result[key] = round(val, decimal_places)
 
             return result
 
