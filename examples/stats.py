@@ -317,6 +317,41 @@ def f_dist_inverse(v1, v2, a):
     return stats.f.ppf(1 - a, v1, v2)
 
 
+@register_formula((
+        ListInput("x"),
+        ListInput("y")
+), name="sample.covariance_all_pairs")
+def covarience_all_pairs(x, y):
+    """
+    Given two sets x and y, find the covarience assuming
+    that any combination (x, y) is equally likely (happens
+    when x and y are independent).
+    """
+    mean_x = mean(x)
+    mean_y = mean(y)
+    # Find of (xi - mean_x) * (yi - mean_y) for all possible combinations (x[i], y[j])
+    return sum([(xi - mean_x) * (yj - mean_y) for xi in x for yj in y])
+
+
+@register_formula((
+        ListInput("x"),
+        ListInput("y")
+), name="sample.covariance_one_to_one")
+def covarience_one_to_one(x, y):
+    """
+    Given two sets x and y of equal lengths, return
+    the covarience assuming that x and y only occur in matching
+    pairs (one-to-one relationship).
+    """
+    if len(x) != len(y):
+        raise UserInputError("x and y must be one-to-one.")
+
+    mean_x = mean(x)
+    mean_y = mean(y)
+    # Find of (xi - mean_x) * (yi - mean_y) for all pairs (xi, yi)
+    return sum([(x[i] - mean_x) * (y[i] - mean_y) for i in range(len(x))])
+
+
 def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args, **kwargs):
     """
     Find the area between the lower and upper bounds of a scipy.stats continuous random variable distribution.
