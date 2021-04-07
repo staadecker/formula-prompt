@@ -10,9 +10,6 @@ formulas into this library.
 
 launch_prompt() -- Starts the prompt using the registered formulas.
 """
-import functools
-import math
-
 from formula_prompt.core import *
 from formula_prompt.inputs import Input
 from formula_prompt.navigation import Folder
@@ -39,30 +36,11 @@ def register_formula(func_inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, na
 
     # Define the decorator
     def decorator(func):
-        @functools.wraps(func)  # Make func.__name__ keeps its value
-        # Define function to be called when func is called
-        def inner_function(*args, **kwargs):
-            result = func(*args, **kwargs)  # Call the function
-
-            # TODO move rounding to printing stage
-            if decimal_places is not None:
-                # Round the result if the result is a float
-                if isinstance(result, float) and not math.isnan(result):
-                    result = round(result, ndigits=decimal_places)
-
-                # Round the result if the result is a dict
-                elif isinstance(result, dict):
-                    for key, val in result.items():
-                        if isinstance(val, float) and not math.isnan(val):
-                            result[key] = round(val, decimal_places)
-
-            return result
-
         # Register the formula in the root folder (the folder will handle placing it in the right location)
         _add_formula(NAVIGATION_ROOT.children,
-                     Formula(inner_function, func_inputs, name if name is not None else func.__name__))
+                     Formula(func, func_inputs, name if name is not None else func.__name__, decimal_places))
         # Return the wrapped function
-        return inner_function
+        return func
 
     return decorator
 
