@@ -361,6 +361,18 @@ def sum_of_distances_squares(x):
     # Find the sum of (xi - mean_x) ^2 for all xi
     return sum([(xi - mean_x) ** 2 for xi in x])
 
+@register_formula((
+        ListInput("x"),
+        ListInput("y")
+), name="regression.simple linear regression")
+def simple_linear_regression(x, y):
+    """
+    Estimates the parameters b0 and b1 which represent
+    the y-intercept and slope for the line of best fit
+    through the (x, y) pairs of data.
+    """
+    b1 = unnormalized_covariance(x, y) / sum_of_distances_squares(x)
+    return {"b0": mean(y) - b1 * mean(x), "b1": b1}
 
 def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args, **kwargs):
     """
