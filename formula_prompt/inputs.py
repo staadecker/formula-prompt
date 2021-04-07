@@ -1,4 +1,4 @@
-from formula_prompt.core import MAX_ENTRY_ATTEMPTS, UserInputError, DoneCollectingInput
+from formula_prompt.core import *
 
 
 class Input:
@@ -15,6 +15,10 @@ class Input:
     @staticmethod
     def add_preprocess(preprocess):
         Input._preprocesses.append(preprocess)
+
+    @staticmethod
+    def overwrite_reader(reader):
+        Input._reader = reader
 
     def __init__(self, name="data", optional=False):
         """Initialize the instance.
@@ -34,7 +38,8 @@ class Input:
         # Print "Input <name>: " or "Input data: " if name isn't defined.
         print(f"Input {self.name}:")
         try:
-            self.process(self.get_input)
+            self.result = None
+            self.get_result(self.get_input)
         except DoneCollectingInput:
             pass
         return self.result
@@ -56,9 +61,9 @@ class Input:
             self.result = preprocess_result
             raise DoneCollectingInput
 
-    def process(self, get_input) -> None:
+    def get_result(self, get_input) -> None:
         """
-        Function to be overridden by subclasses. Should read from input() and return
+        Function to be overridden by subclasses. Should read from get_input and return
         the parsed value that will be passed on to the formula.
         """
         raise NotImplemented("Please use a subclass of Input such as NumInput or ListInput")
@@ -67,15 +72,24 @@ class Input:
 class NumInput(Input):
     """Input that accepts a number from the user."""
 
-    def __init__(self, name="number", require_int=False, **kwargs):
+    def __init__(self, name="number", require_int=False, min=None, max=None, **kwargs):
         super(NumInput, self).__init__(name=name, **kwargs)
         self.require_int = require_int
+        self.min = min
+        self.max = max
 
-    def process(self, get_input):
+    def get_result(self, get_input):
         for _ in range(MAX_ENTRY_ATTEMPTS):
             try:
                 i = get_input()
-                self.result = int(i) if self.require_int else float(i)
+                num = int(i) if self.require_int else float(i)
+                if self.min is not None and num < self.min:
+                    print("Too small")
+                    continue
+                if self.max is not None and num > self.max:
+                    print("Too big")
+                    continue
+                self.result = num
                 return
             except ValueError:
                 print("Invalid number. Try again.")
@@ -88,7 +102,7 @@ class PercentInput(Input):
     def __init__(self, name="number (percent)", **kwargs):
         super(PercentInput, self).__init__(name=name, **kwargs)
 
-    def process(self, get_input):
+    def get_result(self, get_input):
         for _ in range(MAX_ENTRY_ATTEMPTS):
             try:
                 str_i = get_input()
@@ -119,7 +133,7 @@ class ListInput(Input):
     def __init__(self, name="list", **kwargs):
         super(ListInput, self).__init__(name=name, **kwargs)
 
-    def process(self, get_input):
+    def get_result(self, get_input):
         self.result = []
         consecutive_failures = 0
         while True:

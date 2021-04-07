@@ -51,7 +51,7 @@ def get_from_memory(key):
     return MEMORY.get(key, None)
 
 
-def register_memory_plugin():
+def register_memory_extension():
     Input.add_preprocess(get_from_memory)
     Folder.add_persistent_child(_AddToMemoryFolder())
     Folder.add_persistent_child(_ReadFromMemory())

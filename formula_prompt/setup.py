@@ -16,7 +16,7 @@ import math
 from formula_prompt.core import *
 from formula_prompt.inputs import Input
 from formula_prompt.navigation import Folder
-from formula_prompt.extensions.memory import register_memory_plugin
+from formula_prompt.extensions.memory import register_memory_extension
 
 _DEFAULT_NUMBER_OF_DECIMALS = 4
 
@@ -106,5 +106,5 @@ def launch_prompt(enable_memory=True):
     Launches the prompt at the navigation root folder.
     """
     if enable_memory:
-        register_memory_plugin()
+        register_memory_extension()
     NAVIGATION_ROOT.run()

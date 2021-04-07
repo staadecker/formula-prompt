@@ -34,6 +34,12 @@ class Element:
 
 
 class Formula(Element):
+    _print_result = print
+
+    @staticmethod
+    def override_print_result(printer):
+        Formula._print_result = printer
+
     def __init__(self, func, inputs, name):
         super(Formula, self).__init__(name)
         self.func = func
@@ -56,7 +62,8 @@ class Formula(Element):
 
             # Print the results
             if ans is not None:
-                print(f"{self.name}:\n{ans}")
+                print(f"{self.name}:")
+                Formula._print_result(ans)
 
             selection = input("\nEnter to run again or 0 to return...\n>>> ")
             if selection == "0":

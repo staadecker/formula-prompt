@@ -3,6 +3,7 @@ navigation.py defines classes that allow the user to navigate between and pick f
 """
 from formula_prompt.core import *
 from typing import List
+from formula_prompt.inputs import IntInput
 
 
 class Folder(Element):
@@ -28,7 +29,6 @@ class Folder(Element):
         self.leave_folder_child = _LeaveFolder(self.is_root_folder)
 
     def get_children(self) -> List[Element]:
-        """Let the user pick a child of the folder and run it"""
         # Add the Leave Folder option and any persistent content
         children = [self.leave_folder_child] + Folder._persistent_children
         # Add the folders contents by name for easy navigation (base content always comes first)
@@ -43,16 +43,7 @@ class Folder(Element):
             print(f"{i}:\t{element.name}")
 
         # Let the user pick a number representing the desired element
-        for _ in range(MAX_ENTRY_ATTEMPTS):
-            selection = input("Pick a formula:\n>>> ")
-
-            try:
-                return children[int(selection)]
-            except ValueError:
-                print("Invalid input. Try again.")
-            except IndexError:
-                print("Invalid input. Try again.")
-        raise UserInputError
+        return children[IntInput("formula number", min=0, max=len(children)).read()]
 
     def run(self):
         while True:
