@@ -1,80 +1,45 @@
 """
 navigation.py defines classes that allow the user to navigate between and pick formulas.
 """
-from formula_prompt.shared import MAX_ENTRY_ATTEMPTS, UserInputError
+from formula_prompt.core import *
+from typing import List
 
 
-class _Element:
-    """Element that can be displayed in the Navigation. Sub-classes include Folder and Formula"""
-
-    def __init__(self, name):
-        """
-        :param name: Name to display in the navigation
-        """
-        self.name = name
-
-    def run(self):
-        """
-        Called when the element is selected during navigation
-        """
-        raise NotImplementedError
-
-
-class Formula(_Element):
-    def __init__(self, func, inputs, name):
-        super(Formula, self).__init__(name)
-        self.func = func
-        self.inputs = inputs
-
-    def run(self):
-        while True:
-            inputs = []
-
-            # For each required input, read the input and add it the list
-            try:
-                for input_description in self.inputs:
-                    inputs.append(input_description.read())
-            # If the user fails to enter an input, cancel the formula
-            except UserInputError:
-                break
-
-            # Call the formula with the inputs
-            ans = self.func(*inputs)
-
-            # Print the results
-            if ans is not None:
-                print(f"{self.name}:\n{ans}")
-
-            selection = input("\nEnter to run again or 1 to return...\n>>> ")
-            if selection == "1":
-                break
-
-
-class _Folder:
+class Folder(Element):
     """
     A folder or directory that can store other folders or formulas.
     """
+    # Persistent content is content that is found across all folders
+    _persistent_children: List[Element] = []
 
-    def __init__(self, name, is_root=False):
+    @staticmethod
+    def add_persistent_child(persistent_child: Element):
+        """Add an element to all the folder"""
+        Folder._persistent_children.append(persistent_child)
+
+    def __init__(self, folder_name, is_root_folder=False):
         """
-        :param name: Folder name
-        :param is_root: Specifies if this is the root folder
+        :param folder_name: Folder name
+        :param is_root_folder: Specifies if this is the root folder
         """
-        self.name = name
-        self.contents = set()  # Contents of the folder, starts empty
-        self.is_root = is_root
+        super().__init__(folder_name)
+        self.children = set()  # Contents of the folder, starts empty
+        self.is_root_folder = is_root_folder
+        self.leave_folder_child = _LeaveFolder(self.is_root_folder)
 
-    def pick_element(self):
-        # Sorted the contents by name for easy navigation
-        contents = sorted(list(self.contents), key=lambda x: x.name)
+    def get_children(self) -> List[Element]:
+        """Let the user pick a child of the folder and run it"""
+        # Add the Leave Folder option and any persistent content
+        children = [self.leave_folder_child] + Folder._persistent_children
+        # Add the folders contents by name for easy navigation (base content always comes first)
+        children.extend(sorted(list(self.children), key=lambda x: x.name))
+        return children
 
-        if self.is_root:
-            contents.append(_LeaveFolder("quit"))  # Add the option to quit the root folder (ends program)
-        else:
-            contents.insert(0, _LeaveFolder("go back"))  # Add option to go up one folder
+    def select_child(self):
+        children = self.get_children()
 
         # Print them contents of the folder to the user
-        for i, element in enumerate(contents):
+        for i, element in enumerate(children):
             print(f"{i}:\t{element.name}")
 
         # Let the user pick a number representing the desired element
@@ -82,7 +47,7 @@ class _Folder:
             selection = input("Pick a formula:\n>>> ")
 
             try:
-                return contents[int(selection)]
+                return children[int(selection)]
             except ValueError:
                 print("Invalid input. Try again.")
             except IndexError:
@@ -92,11 +57,11 @@ class _Folder:
     def run(self):
         while True:
             # If there's only one element, select that element to run
-            if len(self.contents) == 1:
-                element_to_run = next(iter(self.contents))
+            if len(self.children) == 1:
+                element_to_run = next(iter(self.children))
             # Otherwise let the user pick
             else:
-                element_to_run = self.pick_element()
+                element_to_run = self.select_child()
 
             # Run the element
             should_leave = element_to_run.run()
@@ -104,55 +69,17 @@ class _Folder:
             # If we should leave break (which returns to parent folder)
             # Also if there was only one element break otherwise we have an
             # infinite loop
-            if should_leave or len(self.contents) <= 1:
+            if should_leave or len(self.children) <= 1:
                 break
 
-    def add_formula(self, formula: Formula, path=None, depth=0):
-        """
-        Add a formula to the folder. Gets called recursively if the formula lives in a nested folder.
 
-        :param formula: The Formula to add
-        :param path: A list of the names of all the folders and the formula
-        :param depth: Current position in the list (how deep we are in the nested folders)
-        """
-        # If path isn't set, we create it by splitting the name at the dots ('.')
-        if path is None:
-            path = formula.name.split(".")
-
-        # If we're at the end of the path (no more nested folders) we add the formula the current folder (self)
-        if depth == len(path):
-            self.contents.add(formula)
-            return
-
-        # Otherwise we need to go into the nested folder
-        # The folders name is the formula name up the current folder
-        folder_name = ".".join(path[:depth + 1])
-        # We check if the folder already exists
-        for element in self.contents:
-            if isinstance(element, _Folder) and element.name == folder_name:
-                # If it does, add the formula to that folder (recursive call)
-                element.add_formula(formula, path, depth + 1)
-                return
-
-        # If the folder doesn't exist, we create it
-        new_folder = _Folder(folder_name)
-        # And add the formula to it (recursive call)
-        new_folder.add_formula(formula, path, depth + 1)
-        # And then add the folder to the current folder
-        self.contents.add(new_folder)
-
-
-class _LeaveFolder(_Element):
+class _LeaveFolder(Element):
     """
     A simple element that will return True when run indicating the callee should exit its call loop.
     """
 
-    def __init__(self, name):
-        super(_LeaveFolder, self).__init__(name)
+    def __init__(self, is_in_root):
+        super().__init__("Quit" if is_in_root else "Go back")
 
     def run(self):
         return True
-
-
-# Initialize a root folder that one can add formulas to (via @register_formula decorator)
-NAVIGATION_ROOT = _Folder(None, is_root=True)

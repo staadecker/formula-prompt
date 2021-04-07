@@ -1,14 +1,22 @@
-from formula_prompt.shared import MAX_ENTRY_ATTEMPTS, UserInputError
+from formula_prompt.core import MAX_ENTRY_ATTEMPTS, UserInputError, DoneCollectingInput
 
 
 class Input:
     """
     A parent class that can be extended to allow for different types of inputs to a formula.
-
-    Important functions are read() and process()
     """
+    # Internal list of preprocess to run before passing on the input
+    # to the subclass. Allows for special handling of for example memory variables.
+    _preprocesses = []
+    # The way we actually get input from the user
+    # Defined here so that it can be overwritten (e.g. to write tests)
+    _reader = lambda: input(">>> ")
 
-    def __init__(self, name, optional=False):
+    @staticmethod
+    def add_preprocess(preprocess):
+        Input._preprocesses.append(preprocess)
+
+    def __init__(self, name="data", optional=False):
         """Initialize the instance.
 
         Arguments:
@@ -19,14 +27,36 @@ class Input:
         """
         self.name = name
         self.optional = optional
+        self.result = None
 
     def read(self):
         """Called by the program to retrieve the input value from the user."""
         # Print "Input <name>: " or "Input data: " if name isn't defined.
-        print("Input {}:".format(self.name if self.name is not None else "data"))
-        return self.process()
+        print(f"Input {self.name}:")
+        try:
+            self.process(self.get_input)
+        except DoneCollectingInput:
+            pass
+        return self.result
 
-    def process(self):
+    def get_input(self):
+        input = Input._reader()
+        self.pre_process_input(input)
+        return input
+
+    def pre_process_input(self, input):
+        if self.optional and input == "":
+            raise DoneCollectingInput
+
+        for preprocess in Input._preprocesses:
+            preprocess_result = preprocess(input)
+            if preprocess_result is None:
+                continue
+
+            self.result = preprocess_result
+            raise DoneCollectingInput
+
+    def process(self, get_input) -> None:
         """
         Function to be overridden by subclasses. Should read from input() and return
         the parsed value that will be passed on to the formula.
@@ -41,17 +71,13 @@ class NumInput(Input):
         super(NumInput, self).__init__(name=name, **kwargs)
         self.require_int = require_int
 
-    def process(self):
+    def process(self, get_input):
         for _ in range(MAX_ENTRY_ATTEMPTS):
             try:
-                i = input(">>> ")
-                if self.require_int:
-                    return int(i)
-                else:
-                    return float(i)
-            except ValueError as e:
-                if self.optional and i == "":
-                    return None
+                i = get_input()
+                self.result = int(i) if self.require_int else float(i)
+                return
+            except ValueError:
                 print("Invalid number. Try again.")
         raise UserInputError
 
@@ -62,20 +88,20 @@ class PercentInput(Input):
     def __init__(self, name="number (percent)", **kwargs):
         super(PercentInput, self).__init__(name=name, **kwargs)
 
-    def process(self):
+    def process(self, get_input):
         for _ in range(MAX_ENTRY_ATTEMPTS):
             try:
-                str_i = input(">>> ")
+                str_i = get_input()
                 float_i = float(str_i)
                 if 0 <= float_i <= 1:
-                    return float_i
+                    self.result = float_i
                 elif 1 <= float_i <= 100:
-                    return float_i / 100
+                    self.result = float_i / 100
                 else:
                     print("Invalid percent. Try again.")
-            except ValueError as e:
-                if self.optional and str_i == "":
-                    return None
+                    continue
+                return
+            except ValueError:
                 print("Invalid number. Try again.")
         raise UserInputError
 
@@ -93,18 +119,21 @@ class ListInput(Input):
     def __init__(self, name="list", **kwargs):
         super(ListInput, self).__init__(name=name, **kwargs)
 
-    def process(self):
-        values = []
+    def process(self, get_input):
+        self.result = []
         consecutive_failures = 0
         while True:
             try:
-                i = input(">>> ")
-                values.append(float(i))
+                i = get_input()
+                self.result.append(float(i))
                 consecutive_failures = 0
             except ValueError:
-                if (values or self.optional) and i == "":
-                    return values
+                if self.result and i == "":
+                    break
                 consecutive_failures += 1
                 if consecutive_failures == MAX_ENTRY_ATTEMPTS:
                     raise UserInputError
                 print("Invalid number. Try again.")
+
+
+ALL_INPUT_TYPES = (ListInput, NumInput, IntInput, PercentInput)
