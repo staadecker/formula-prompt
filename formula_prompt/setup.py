@@ -44,6 +44,7 @@ def register_formula(func_inputs, decimal_places=_DEFAULT_NUMBER_OF_DECIMALS, na
         def inner_function(*args, **kwargs):
             result = func(*args, **kwargs)  # Call the function
 
+            # TODO move rounding to printing stage
             if decimal_places is not None:
                 # Round the result if the result is a float
                 if isinstance(result, float) and not math.isnan(result):

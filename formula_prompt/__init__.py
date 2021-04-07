@@ -2,3 +2,4 @@
 
 from formula_prompt.setup import register_formula, launch_prompt
 from formula_prompt.inputs import IntInput, NumInput, ListInput, PercentInput
+from formula_prompt.core import UserInputError

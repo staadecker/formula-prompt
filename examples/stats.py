@@ -317,30 +317,26 @@ def f_dist_inverse(v1, v2, a):
     return stats.f.ppf(1 - a, v1, v2)
 
 
-@register_formula((
-        ListInput("x"),
-        ListInput("y")
-), name="sample.covariance_all_pairs")
-def covarience_all_pairs(x, y):
-    """
-    Given two sets x and y, find the covarience assuming
-    that any combination (x, y) is equally likely (happens
-    when x and y are independent).
-    """
-    mean_x = mean(x)
-    mean_y = mean(y)
-    # Find of (xi - mean_x) * (yi - mean_y) for all possible combinations (x[i], y[j])
-    return sum([(xi - mean_x) * (yj - mean_y) for xi in x for yj in y])
+@register_formula(ListInput("x"), name="sample.sums.x")
+def sum_of_x(x):
+    """Sums all the values in the list x"""
+    return sum(x)
+
+
+@register_formula(ListInput("x"), name="sample.sums.x ** 2")
+def sum_of_squares(x):
+    """Sums all the squares of x"""
+    return sum(map(lambda xi: xi ** 2, x))
 
 
 @register_formula((
         ListInput("x"),
         ListInput("y")
-), name="sample.covariance_one_to_one")
-def covarience_one_to_one(x, y):
+), name="sample.sums.(xi - mu_x)(yi - mu_y)")
+def unnormalized_covariance(x, y):
     """
     Given two sets x and y of equal lengths, return
-    the covarience assuming that x and y only occur in matching
+    the covariance assuming that x and y only occur in matching
     pairs (one-to-one relationship).
     """
     if len(x) != len(y):
@@ -350,6 +346,20 @@ def covarience_one_to_one(x, y):
     mean_y = mean(y)
     # Find of (xi - mean_x) * (yi - mean_y) for all pairs (xi, yi)
     return sum([(x[i] - mean_x) * (y[i] - mean_y) for i in range(len(x))])
+
+
+@register_formula((
+        ListInput("x")
+), name="sample.sums.(x - mu_x)^2")
+def sum_of_distances_squares(x):
+    """
+    Given two sets x and y of equal lengths, return
+    the covariance assuming that x and y only occur in matching
+    pairs (one-to-one relationship).
+    """
+    mean_x = mean(x)
+    # Find the sum of (xi - mean_x) ^2 for all xi
+    return sum([(xi - mean_x) ** 2 for xi in x])
 
 
 def find_distribution_area(distribution: stats.rv_continuous, lower, upper, *args, **kwargs):
